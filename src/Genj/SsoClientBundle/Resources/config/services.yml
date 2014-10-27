@@ -1,0 +1,6 @@
+services:
+    genj_sso_client.broker:
+        class: Genj\SsoClientBundle\Sso\Broker
+        scope: request
+        arguments:
+            - @request
