@@ -4,3 +4,4 @@ services:
         scope: request
         arguments:
             - @request
+            - %genj_sso_client%

@@ -9,25 +9,25 @@ class Broker {
     /**
      * Pass 401 http response of the server to the client
      */
-    public $pass401=false;
+    public $pass401 = true;
 
     /**
      * Url of SSO server
      * @var string
      */
-    public $url = "http://webservice.dev/dev.php/sso/command";
+    public $url;
 
     /**
      * My identifier, given by SSO provider.
      * @var string
      */
-    public $broker = "LYNX";
+    public $broker;
 
     /**
      * My secret word, given by SSO provider.
      * @var string
      */
-    public $secret = "klm345";
+    public $secret;
 
     /**
      * Need to be shorter than session expire of SSO server
@@ -58,10 +58,13 @@ class Broker {
      *
      * @param Request $request
      */
-    public function __construct(Request $request)
+    public function __construct(Request $request, array $config)
     {
         $this->request = $request;
 
+        $this->setConfig($config);
+
+        var_dump($this->secret);
         if (isset($_COOKIE['session_token'])) {
             $this->sessionToken = $_COOKIE['session_token'];
         }
@@ -153,13 +156,7 @@ class Broker {
 
         list($ret, $body) = $this->serverCmd('login', array('username'=>$username, 'password'=>$password));
 
-        switch ($ret) {
-            case 200: $this->parseInfo($body);
-                return 1;
-            case 401: if ($this->pass401) header("HTTP/1.1 401 Unauthorized");
-                return 0;
-            default:  throw new \Exception("SSO failure: The server responded with a $ret status" . (!empty($body) ? ': "' . substr(str_replace("\n", " ", trim(strip_tags($body))), 0, 256) .'".' : '.'));
-        }
+        return $body;
     }
 
     /**
@@ -173,17 +170,6 @@ class Broker {
         return true;
     }
 
-
-    /**
-     * Set user info from user XML
-     *
-     * @param string $xml
-     */
-    protected function parseInfo($response)
-    {
-        $this->userinfo = json_decode($response);
-    }
-
     /**
      * Get user information.
      */
@@ -192,49 +178,11 @@ class Broker {
         if (!isset($this->userinfo)) {
             list($ret, $body) = $this->serverCmd('info');
 
-            switch ($ret) {
-                case 200:
-                    $this->parseInfo($body);
-                    break;
-                case 401:
-                    if ($this->pass401) {
-                        header("HTTP/1.1 401 Unauthorized");
-                    }
-                    $this->userinfo = false;
-                    break;
-                default:
-                    throw new \Exception("SSO failure: The server responded with a $ret status" . (!empty($body) ? ': "' . substr(str_replace("\n", " ", trim(strip_tags($body))), 0, 256) .'".' : '.'));
-            }
+            return $body;
         }
 
         return $this->userinfo;
     }
-
-    /**
-     * Ouput user information as XML
-     */
-    public function info()
-    {
-        $this->getInfo();
-
-        if (!$this->userinfo) {
-            header("HTTP/1.0 401 Unauthorized");
-            echo "Not logged in";
-            exit;
-        }
-
-        header('Content-type: text/xml; charset=UTF-8');
-        echo '<?xml version="1.0" encoding="UTF-8" ?>', "\n";
-        echo '<user identity="' . htmlspecialchars($this->userinfo['identity'], ENT_COMPAT, 'UTF-8') . '">', "\n";
-
-        foreach ($this->userinfo as $key=>$value) {
-            if ($key == 'identity') continue;
-            echo "<$key>", htmlspecialchars($value, ENT_COMPAT, 'UTF-8'), "</$key>", "\n";
-        }
-
-        echo '</user>';
-    }
-
 
     /**
      * Execute on SSO server.
@@ -242,7 +190,7 @@ class Broker {
      * @param string $cmd   Command
      * @param array  $vars  Post variables
      *
-     * @throws Exception
+     * @throws \Exception
      *
      * @return array
      */
@@ -261,8 +209,17 @@ class Broker {
 
         $body = curl_exec($curl);
         $ret = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        if (curl_errno($curl) != 0) throw new \Exception("SSO failure: HTTP request to server failed. " . curl_error($curl));
+        if (curl_errno($curl) != 0) {
+            throw new \Exception("SSO failure: HTTP request to server failed. " . curl_error($curl));
+        }
 
         return array($ret, $body);
+    }
+
+    public function setConfig($config)
+    {
+        $this->broker = $config['broker_identifier'];
+        $this->secret = $config['broker_secret'];
+        $this->url    = $config['server_url'];
     }
 }

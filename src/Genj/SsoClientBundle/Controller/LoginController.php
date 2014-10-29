@@ -3,6 +3,8 @@
 namespace Genj\SsoClientBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\BrowserKit\Response;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Genj\SsoClientBundle\Sso\Broker;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
@@ -29,18 +31,41 @@ class LoginController extends Controller
             return $client->autoAttach($request->getUri());
         }
 
-        $client->pass401 = true;
         $command = $request->get('cmd', false);
 
         if ($command) {
             $ret = $client->$command();
         }
 
-        var_dump($client->getInfo());
+        $info = $client->getInfo();
+
+        var_dump($info);
 
 
         return $this->render(
             'GenjSsoClientBundle:Login:index.html.twig'
         );
+    }
+
+    public function loginAction(Request $request)
+    {
+
+    }
+
+    public function logoutAction(Request $request)
+    {
+        /**
+         * @var Broker $broker
+         */
+        $broker = $this->get('genj_sso_client.broker');
+
+        $broker->logout();
+
+        return new RedirectResponse($request->headers->get('referer'));
+    }
+
+    public function infoAction(Request $request)
+    {
+
     }
 }

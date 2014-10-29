@@ -22,7 +22,7 @@ class GenjSsoClientExtension extends Extension
     {
         $configuration          = new Configuration();
         $processedConfiguration = $this->processConfiguration($configuration, $configs);
-        $container->setParameter('genj_sso_client.kiosk_identifier', $processedConfiguration['kiosk_identifier']);
+        $container->setParameter('genj_sso_client', $processedConfiguration);
 
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');

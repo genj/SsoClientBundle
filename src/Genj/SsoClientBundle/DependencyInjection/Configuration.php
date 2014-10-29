@@ -23,8 +23,16 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                ->scalarNode('kiosk_identifier')
-                    ->info('The unique identifying name of the parent kiosk this site belongs to')
+                ->scalarNode('broker_identifier')
+                    ->info('The unique identifying name of this broker')
+                    ->isRequired()
+                ->end()
+                ->scalarNode('broker_secret')
+                    ->info('The secret belonging to this broker')
+                    ->isRequired()
+                ->end()
+                ->scalarNode('server_url')
+                    ->info('The SSO server url')
                     ->isRequired()
                 ->end()
             ->end();
