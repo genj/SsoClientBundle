@@ -1,5 +1,12 @@
 <h1>Login</h1>
-<form method="post" action="/dev.php/login?cmd=login">
+
+{% for flashMessage in app.session.flashbag.get('error') %}
+    <div class="error-notice" style="padding: 5px; color: white; background: #FF0000; font-weight: bold; margin: 10px; display: inline-block">
+        {{ flashMessage }}
+    </div>
+{% endfor %}
+
+<form method="post" action="{{ path('genj_sso_client_login') }}">
     Username: <input type="text" name="username" size="15" /><br />
     Password: <input type="password" name="password" size="15" /><br />
     <div>

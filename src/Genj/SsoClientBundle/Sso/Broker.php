@@ -64,7 +64,6 @@ class Broker {
 
         $this->setConfig($config);
 
-        var_dump($this->secret);
         if (isset($_COOKIE['session_token'])) {
             $this->sessionToken = $_COOKIE['session_token'];
         }
@@ -134,7 +133,8 @@ class Broker {
     {
         $token = $this->getSessionToken();
         $checksum = md5("attach{$token}{$this->request->getClientIp()}{$this->secret}");
-        return "{$this->url}?cmd=attach&broker={$this->broker}&token=$token&checksum=$checksum";
+
+        return rtrim($this->url, '/') ."/attach?broker=". $this->broker ."&token=". $token ."&checksum=". $checksum;
     }
 
 
@@ -196,7 +196,7 @@ class Broker {
      */
     protected function serverCmd($cmd, $vars=null)
     {
-        $curl = curl_init($this->url . '?cmd=' . urlencode($cmd) .'&PHPSESSID=' . $this->getSessionId());
+        $curl = curl_init(rtrim($this->url, '/') . '/' . urlencode($cmd) .'?PHPSESSID=' . $this->getSessionId());
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_COOKIE, "PHPSESSID=" . $this->getSessionId());
 
@@ -213,7 +213,7 @@ class Broker {
             throw new \Exception("SSO failure: HTTP request to server failed. " . curl_error($curl));
         }
 
-        return array($ret, $body);
+        return array($ret, json_decode($body));
     }
 
     public function setConfig($config)

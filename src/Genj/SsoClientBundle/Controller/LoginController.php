@@ -23,49 +23,49 @@ class LoginController extends Controller
     public function indexAction(Request $request)
     {
         /**
-         * @var Broker $client
+         * @var Broker $broker
          */
-        $client = $this->get('genj_sso_client.broker');
+        $broker = $this->get('genj_sso_client.broker');
 
-        if (!$client->isAttached()) {
-            return $client->autoAttach($request->getUri());
+        if ($request->getMethod() == 'POST') {
+            $loginResponse = $broker->login();
+
+            if (isset($loginResponse->error)) {
+                $request->getSession()->getFlashBag()->add('error', $loginResponse->error);
+            }
         }
 
-        $command = $request->get('cmd', false);
-
-        if ($command) {
-            $ret = $client->$command();
-        }
-
-        $info = $client->getInfo();
+        $info = $broker->getInfo();
 
         var_dump($info);
-
 
         return $this->render(
             'GenjSsoClientBundle:Login:index.html.twig'
         );
     }
 
+    /**
+     * @param Request $request
+     */
     public function loginAction(Request $request)
-    {
-
-    }
-
-    public function logoutAction(Request $request)
     {
         /**
          * @var Broker $broker
          */
         $broker = $this->get('genj_sso_client.broker');
 
+        $broker->login();
+    }
+
+    public function logoutAction(Request $request)
+    {
+        /**
+         * @var Broker $client
+         */
+        $broker = $this->get('genj_sso_client.broker');
+
         $broker->logout();
 
         return new RedirectResponse($request->headers->get('referer'));
-    }
-
-    public function infoAction(Request $request)
-    {
-
     }
 }
