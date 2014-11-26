@@ -1,9 +1,14 @@
+parameters:
+    sso_client.form.handler.class: Genj\SsoClientBundle\Form\Handler\RegistrationFormHandler
+    sso_client_bundle_user_provider.class: Genj\SsoClientBundle\Security\User\SsoUserProvider
+
+
 services:
     genj_sso_client.broker:
         class: Genj\SsoClientBundle\Sso\Broker
         scope: request
         arguments:
-            - @request
+            - @request_stack
             - %genj_sso_client%
 
     genj_sso_client.action_listener:
@@ -12,3 +17,19 @@ services:
         scope: request
         tags:
             - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    sso_client.registration.form.handler:
+        class:  %sso_client.form.handler.class%
+        scope:  request
+        arguments:
+            - @request
+
+    sso_client_bundle_user_provider:
+        class: "%sso_client_bundle_user_provider.class%"
+
+    sso_client_bundle_authenticator:
+        class:     Genj\SsoClientBundle\Security\SsoClientAuthenticator
+        arguments:
+            - @sso_client_bundle_user_provider
+            - @request_stack
+            - %genj_sso_client%

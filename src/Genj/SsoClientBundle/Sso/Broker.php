@@ -4,6 +4,8 @@ namespace Genj\SsoClientBundle\Sso;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Security\Core\Authentication\Token\PreAuthenticatedToken;
 
 class Broker {
     /**
@@ -56,11 +58,12 @@ class Broker {
     /**
      * Class constructor
      *
-     * @param Request $request
+     * @param RequestStack $request
      */
-    public function __construct(Request $request, array $config)
+    public function __construct(RequestStack $requestStack, array $config)
     {
-        $this->request = $request;
+
+        $this->request = $requestStack->getMasterRequest();
 
         $this->setConfig($config);
 
@@ -156,6 +159,12 @@ class Broker {
 
         list($ret, $body) = $this->serverCmd('login', array('username'=>$username, 'password'=>$password));
 
+        if (isset($body->error)) {
+            $this->request->getSession()->getFlashBag()->add('error', $body->error);
+        } else {
+            $this->request->getSession()->set('ssoAuthToken', $body->data->authToken);
+        }
+
         return $body;
     }
 
@@ -164,10 +173,23 @@ class Broker {
      */
     public function logout()
     {
+        $this->request->getSession()->remove('ssoAuthToken');
         list($ret, $body) = $this->serverCmd('logout');
         if ($ret != 200) throw new \Exception("SSO failure: The server responded with a $ret status" . (!empty($body) ? ': "' . substr(str_replace("\n", " ", trim(strip_tags($body))), 0, 256) .'".' : '.'));
 
+
         return true;
+    }
+
+    public function validateAuthToken($token)
+    {
+        list($ret, $body) = $this->serverCmd('validate-token', array('authToken' => $token));
+
+        if (isset($body->error)) {
+            return false;
+        } else {
+            return $body;
+        }
     }
 
     /**
@@ -196,7 +218,7 @@ class Broker {
      */
     protected function serverCmd($cmd, $vars=null)
     {
-        $curl = curl_init(rtrim($this->url, '/') . '/' . urlencode($cmd) .'?PHPSESSID=' . $this->getSessionId());
+        $curl = curl_init(rtrim($this->url, '/') . '/' . $cmd .'?PHPSESSID=' . $this->getSessionId());
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_COOKIE, "PHPSESSID=" . $this->getSessionId());
 

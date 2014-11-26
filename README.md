@@ -17,6 +17,16 @@ Add the bundle to your composer.json
 }
 ```
 
+Add the bundle to your AppKernel.php
+
+```
+public function registerBundles() {
+        $bundles = array(
+            ...
+            new Genj\SsoClientBundle\GenjSsoClientBundle(),
+        );
+```
+
 Add the following pararmeters to your config.yml
 
 ```
