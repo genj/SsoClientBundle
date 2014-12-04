@@ -4,6 +4,7 @@ namespace Genj\SsoClientBundle\Controller;
 
 use Genj\SsoClientBundle\Form\Type\RegistrationType;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -33,7 +34,9 @@ class RegistrationController extends Controller
 
                 $formHandler->processForm($form);
 
-                return new Response('Valid Form');
+                $request->getSession()->getFlashBag()->set('success', true);
+
+                return new RedirectResponse($request->getUri());
             }
         }
 

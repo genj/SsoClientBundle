@@ -18,7 +18,7 @@ class RegistrationFormHandler {
         $userData = $form->getData();
         // Post this data to the server
 
-        $response = array('status' => 200, 'data' => array('username' => $userData['username']));
+        $response = array('status' => 200, 'data' => array('username' => $userData['email']));
 
         return true;
     }

@@ -5,6 +5,7 @@ namespace Genj\SsoClientBundle\Controller;
 use Genj\SsoClientBundle\Security\User\SsoUser;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\BrowserKit\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Genj\SsoClientBundle\Sso\Broker;
@@ -93,5 +94,16 @@ class LoginController extends Controller
         $broker->logout();
 
         return new RedirectResponse($request->headers->get('referer'));
+    }
+
+    public function attachAction(Request $request)
+    {
+        $ssoClientService = $this->container->get('genj_sso_client.broker');
+
+        if (!$ssoClientService->isAttached()) {
+            return $ssoClientService->autoAttach($request->getUri());
+        } else {
+            return new JsonResponse(array('status' => 'attached'));
+        }
     }
 }

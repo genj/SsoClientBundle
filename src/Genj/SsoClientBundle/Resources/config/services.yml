@@ -11,13 +11,6 @@ services:
             - @request_stack
             - %genj_sso_client%
 
-    genj_sso_client.action_listener:
-        class: Genj\SsoClientBundle\EventListener\AuthenticationListener
-        arguments: [@genj_sso_client.broker]
-        scope: request
-        tags:
-            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
-
     sso_client.registration.form.handler:
         class:  %sso_client.form.handler.class%
         scope:  request

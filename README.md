@@ -27,13 +27,22 @@ public function registerBundles() {
         );
 ```
 
+Make sure you have set the following parameters in your parameters.yml.
+During the composer install it will prompt you for these settings.
+the server url should be the full domain, including the base path of your SSO Server routings
+
+```
+    genj_sso_client_server_url: http://webservice.dev/sso/command
+    genj_sso_client_broker_secret: 6I3xRWQ4MAMppTvO3nm5
+```
+
 Add the following pararmeters to your config.yml
 
 ```
 genj_sso_client:
     broker_identifier: ABrokerIdentifierKnownOnTheServer
     broker_secret: SomeVerySecretKey
-    server_url: http://urltoserver.ext/sso/command # Replace 
+    server_url: %genj_sso_client_server_url% # Replace 
 ```
 
 Add the following routes to your routing.yml
